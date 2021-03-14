@@ -37,8 +37,9 @@ def lower_words(text):
 def make_dict(words):
     frequency = {}
     for word in words:
-        count = frequency.get(word, 0)
-        frequency[word] = count + 1
+        if word != " ":
+            count = frequency.get(word, 0)
+            frequency[word] = count + 1
 
     sorted_frequency = sorted(frequency.items(), reverse=True, key=lambda x: x[1])
     return sorted_frequency
