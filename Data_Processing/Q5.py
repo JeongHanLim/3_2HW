@@ -78,6 +78,22 @@ def cal_tf_idf(tf, idf, keyword):
 
     return tf_idf
 
+
+def delete_stop_words(words):
+    f = open("stop_words.txt", 'r')
+    stop_word = []
+    returningwords= []
+    lines = f.readlines()
+    for line in lines:
+        stop_word.append(line.rstrip())
+    f.close()
+
+    for word in words:
+        if word not in stop_word:
+            returningwords.append(word)
+    return returningwords
+
+
 def main():
     keyword = ["statistics", "analytics", "data", "science"]
     urls = get_url()
@@ -95,6 +111,7 @@ def main():
         # STRIPPING
         result_text = strip_punctuation_space(result_text)
         result_text = result_text.split(' ')
+        result_text = delete_stop_words(result_text)
 
         # GETTING DATA
         len_web = len(result_text)

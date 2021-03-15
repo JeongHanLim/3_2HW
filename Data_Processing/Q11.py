@@ -22,6 +22,22 @@ def extract_keyword(words, target):
 
     return keyword
 
+def delete_stop_words(words):
+    f = open("stop_words.txt", 'r')
+    stop_word = []
+    returningwords= []
+    lines = f.readlines()
+    for line in lines:
+        stop_word.append(line.rstrip())
+    f.close()
+
+    for word in words:
+        if word not in stop_word:
+            print(word)
+            returningwords.append(word)
+    return returningwords
+
+
 def clean_nonalpha(texts):
     returningstr = []
     #Delete \n
