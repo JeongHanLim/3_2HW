@@ -44,6 +44,7 @@ print('Training Loss at the last epoch: %.2f' % loss)
 # EVALUATION
 test_x, test_y = test_data
 pred = model.forward(test_x)
+
 MSE = metric(pred, test_y)
 
 print(OPTIMIZER, ' MSE on Test Data : %.2f' % MSE)
