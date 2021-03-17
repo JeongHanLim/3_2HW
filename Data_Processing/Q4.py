@@ -39,18 +39,23 @@ def tokenization(text):
     return text.split(' ')
 
 
-def make_dict(text, keywords = None):
+def make_dict(text):
     frequency = {}
-    if keywords is not None:
 
     for word in text:
         count = frequency.get(word, 0)
         frequency[word] = count + 1
     return frequency
 
+
 def len_webpage(text):
     return len(text)
 
+
+def make_dict2(text, keyword):+6
+    frequency = {}
+    for word in text:
+        
 
 def tf_idf(keyword, len_web):
     keyword= {}
