@@ -9,21 +9,21 @@ def get_text(URL):
     soup = BeautifulSoup(source_code_from_URL, 'lxml', from_encoding='utf-8')
     return ''.join([str(item.find_all(text=True)) for item in soup.find_all('p')])
 
+
 def split_text(text):
     return text.split(' ')
 
 
-def clean_nonalpha(texts):
-    returningstr = []
-    #Delete \n
-    for text in texts:
-        newtext = text.replace('\\n', "")
-        newtext = " ".join(re.findall("[a-zA-Z]+", newtext))
-        returningstr.append(newtext)
-    return returningstr
+def clean_nonalpha(text):
+    text = text.replace('\\n', "")
+    text = re.sub(pattern="[^\w\s]", repl="", string=text)
+    text = re.sub(' +', ' ', text)
+    return text
+
 
 def lower_words(text):
     return text.lower()
+
 
 def make_dict(words):
     frequency = {}
@@ -33,6 +33,7 @@ def make_dict(words):
 
     sorted_frequency = sorted(frequency.items(), reverse=True, key=lambda x: x[1])
     return sorted_frequency
+
 
 def delete_stop_words(words):
     f = open("stop_words.txt", 'r')
@@ -45,17 +46,28 @@ def delete_stop_words(words):
 
     for word in words:
         if word not in stop_word:
-            print(word)
             returningwords.append(word)
     return returningwords
 
+
+def extract_keyword(words, target):
+    keyword = []
+    for word in words:
+        if len(word.split(target))>=2:
+            if not word.split(target)[1].isalpha():
+                keyword.append(word)
+
+    return keyword
+
+
 def main():
     result_text = get_text(URL)
-    words = lower_words(result_text)
-    words = split_text(words)
+    words = result_text.lower()
     words = clean_nonalpha(words)
+    words = split_text(words)
     words = delete_stop_words(words)
-    frequency = make_dict(words)
+    keyword = extract_keyword(words, "ing")
+    frequency = make_dict(keyword)
 
     for x in frequency:
         print(x[0], " ::", x[1])

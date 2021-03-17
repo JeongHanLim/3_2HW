@@ -1,0 +1,5 @@
+Number of unique words in documents:[405, 1958, 691, 921, 1195]
+Number of unique words in documents:[661, 3876, 1172, 1460, 2146]
+Number of unique words in documents: [405, 1958, 691, 921, 1195]
+Length of documents: [661, 3876, 1172, 1460, 2146]
+tf

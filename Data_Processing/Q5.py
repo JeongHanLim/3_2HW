@@ -59,11 +59,6 @@ def tf(keyword, len_web, text):
     #tf = dict((k, keyword_dict[k]/len_web) for k in keyword if k in keyword_dict)
     return tf
 
-
-def print_dict(dict):
-    for x in dict:
-        print(x[0], " :: ", x[1])
-
 def get_idf(dict, urls):
     idf_list = {}
     for word, tf_value in dict.items():
@@ -75,7 +70,7 @@ def cal_tf_idf(tf, idf, keyword):
     tf_idf = {}
     for word, value in tf.items():
         tf_idf[word] = np.array(value) * idf[word]
-
+        tf_idf[word] = list(tf_idf[word])
     return tf_idf
 
 
@@ -93,6 +88,31 @@ def delete_stop_words(words):
             returningwords.append(word)
     return returningwords
 
+def print_dict(dict):
+    for key in dict.keys():
+        print(key, dict[key], " ", end="")
+
+
+def save_txt(lista, listb, dicta, dictb, dictc):
+    f = open("Q3_Part1.txt", "a+")
+    f.write("Number of unique words in documents: ")
+    f.write(str(lista)+"\n")
+    f.write("Length of documents: ")
+    f.write(str(listb)+"\n")
+    f.write("tf")
+    f.write(print_dict(dict(dicta)))
+    """
+    print("tf ", end="")
+    print_dict(dict(tf_dict_all))
+    print("\n")
+    print("idf ", end="")
+    print_dict(idf_list)
+    print("\n")
+    print("tf-idf ", end="")
+    print_dict(tf_idf_dict)
+    print("\n")
+    """
+    f.close()
 
 def main():
     keyword = ["statistics", "analytics", "data", "science"]
@@ -129,18 +149,19 @@ def main():
     idf_list = get_idf(tf_dict_all, urls)
     tf_idf_dict = cal_tf_idf(tf_dict_all, idf_list, keyword)
 
-        # DEBUG CODE
-        #len_word, frequency_dict = make_dict(result_text)
-        #print_dict(frequency_dict)
-        #print(len_web)
-        #print(tf_dict)
 
-    print(n_words_list)
-    print(len_document_list)
-    print(tf_dict_all)
-    print(idf_list)
-    print(tf_idf_dict)
+    print("Number of unique words in documents:", n_words_list)
+    print("Length of documents", len_document_list)
+    print("tf ", end="")
+    print_dict(dict(tf_dict_all))
+    print("\n")
+    print("idf ", end="")
+    print_dict(idf_list)
+    print("\n")
+    print("tf-idf ", end="")
+    print_dict(tf_idf_dict)
+    print("\n")
 
-
+    save_txt(n_words_list, len_document_list, tf_dict_all, idf_list, tf_idf_dict)
 if __name__=="__main__":
     main()

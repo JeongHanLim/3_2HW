@@ -19,29 +19,21 @@ class LinearRegression:
         loss_total = []
         for epoch in range(epochs):
             pick_rand_data = np.random.randint(0, len(x)-batch_size)
-
             x_batch = x[pick_rand_data: pick_rand_data + batch_size]
             y_batch = y[pick_rand_data: pick_rand_data + batch_size]
-            y_batch = np.asarray(y_batch).reshape(-1, 1)
-
-
+            y_batch = np.asarray(y_batch).reshape(10, 1)
             y_pred = np.matmul(x_batch, self.W)
-            m_grad = -2*np.matmul(x, np.matmul(self.W, x))
-
-            print("shape of gradient m is ", m_grad.shape)
-
-            #w = optim(w=w, grad=m_grad, lr=lr)
-
-            self.W = self.W-m_grad*lr
 
 
-        #For Check.
-        plt.plot(loss_total)
-        plt.show()
-        final_loss = mseloss
+            m_grad = -2 / len(x) * sum(np.dot(x_batch.transpose(), (y_batch-y_pred)))
+            mseloss = np.sum(np.square(y_batch-y_pred))
+            loss_total.append(mseloss)
+            self.W = optim.update(self.W, m_grad, lr)
+
+            #self.W = self.W-m_grad*lr
 
 
-
+        final_loss = mseloss/batch_size
 
         # ============================================================
 

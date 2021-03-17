@@ -60,23 +60,25 @@ def tf(keyword, len_web, text):
     return tf
 
 
-def print_dict(dict):
-    for x in dict:
-        print(x[0], " :: ", x[1])
 
 def get_idf(dict, urls):
     idf_list = {}
-    for word, tf_value in dict.items():
-        idf_list[word] = len(urls) - tf_value.count(0)
 
+    for word, tf_value in dict.items():
+        idf_list[word] = np.log(len(urls) / (len(urls) - tf_value.count(0)))
     return idf_list
+
 
 def cal_tf_idf(tf, idf, keyword):
     tf_idf = {}
     for word, value in tf.items():
         tf_idf[word] = np.array(value) * idf[word]
-
+        tf_idf[word] = list(tf_idf[word])
     return tf_idf
+
+def print_dict(dict):
+    for key in dict.keys():
+        print(key, dict[key], " ", end="")
 
 def main():
     keyword = ["statistics", "analytics", "data", "science"]
@@ -112,17 +114,19 @@ def main():
     idf_list = get_idf(tf_dict_all, urls)
     tf_idf_dict = cal_tf_idf(tf_dict_all, idf_list, keyword)
 
-        # DEBUG CODE
-        #len_word, frequency_dict = make_dict(result_text)
-        #print_dict(frequency_dict)
-        #print(len_web)
-        #print(tf_dict)
 
-    print(n_words_list)
-    print(len_document_list)
-    print(tf_dict_all)
-    print(idf_list)
-    print(tf_idf_dict)
+    print("Number of unique words in documents:", n_words_list)
+    print("Length of documents", len_document_list)
+    print("tf ", end="")
+    print_dict(dict(tf_dict_all))
+    print("\n")
+    print("idf ", end="")
+    print_dict(idf_list)
+    print("\n")
+    print("tf-idf ", end="")
+    print_dict(tf_idf_dict)
+    print("\n")
+
 
 
 if __name__=="__main__":
