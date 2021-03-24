@@ -6,7 +6,7 @@ from sklearn.linear_model import LogisticRegression
 # 2. Adjust Hyperparameters
 # ========================= EDIT HERE ========================
 # DATA
-DATA_NAME = 'Titanic'
+DATA_NAME = 'Digit'
 
 # HYPERPARAMETERS
 num_epochs = 300
@@ -23,10 +23,11 @@ print('# of Training data : ', num_data)
 ACC = 0.0
 # ========================= EDIT HERE ========================
 
-model = LogisticRegression(max_iter = 4000).fit(train_x, train_y)
+model = LogisticRegression(solver='liblinear', random_state=0).fit(train_x, train_y)
 # EVALUATION
 test_x, test_y = test_data
 pred = model.predict(test_x)
+pred = pred.reshape(-1, 1)
 ACC = metric(pred, test_y)
 
 # ============================================================

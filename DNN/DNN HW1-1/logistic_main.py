@@ -9,7 +9,7 @@ np.random.seed(428)
 # 3. Choose Optimizer : SGD
 
 # DATA
-DATA_NAME = 'Titanic'
+DATA_NAME = 'Digit'
 
 # HYPERPARAMETERS
 batch_size = 10

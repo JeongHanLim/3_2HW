@@ -21,6 +21,7 @@ class LinearRegression:
         for epoch in range(epochs):
             mseloss = 0
             cnt = 0
+
             tmp = [[x_t, y_t] for x_t, y_t in zip(x, y)]
             random.shuffle(tmp)
             x = [x[0] for x in tmp]
@@ -37,8 +38,7 @@ class LinearRegression:
                 m_grad = -1 / batch_size * sum(np.dot(x_batch.transpose(), (y_batch-y_pred)))
                 mseloss += np.mean(np.square(y_batch-y_pred))
                 self.W = optim.update(self.W, m_grad, lr)
-                cnt += 1
-            mseloss = mseloss/cnt
+            mseloss = mseloss/x.shape[0]
             print(epoch, "in loss", mseloss)
             loss_total.append(mseloss)
 
