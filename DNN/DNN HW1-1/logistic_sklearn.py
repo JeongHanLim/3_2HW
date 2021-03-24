@@ -22,11 +22,13 @@ num_data, num_features = train_x.shape
 print('# of Training data : ', num_data)
 ACC = 0.0
 # ========================= EDIT HERE ========================
-# Make model & optimizer
 
-# TRAIN
-
+model = LogisticRegression(max_iter = 4000).fit(train_x, train_y)
 # EVALUATION
+test_x, test_y = test_data
+pred = model.predict(test_x)
+ACC = metric(pred, test_y)
+
 # ============================================================
 
 print('ACC on Test Data : %.2f ' % ACC)

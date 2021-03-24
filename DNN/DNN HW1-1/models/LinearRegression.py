@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 class LinearRegression:
     def __init__(self, num_features):
@@ -14,30 +15,36 @@ class LinearRegression:
         # Loss of an epoch is calculated as an average of minibatch losses
         # Weights are updated through the optimizer, not directly within 'train' function.
         # ========================= EDIT HERE ========================
-        mseloss = 0
-        #b = np.random.rand(10, 1)
+
         loss_total = []
+
         for epoch in range(epochs):
-            pick_rand_data = np.random.randint(0, len(x)-batch_size)
-            x_batch = x[pick_rand_data: pick_rand_data + batch_size]
-            y_batch = y[pick_rand_data: pick_rand_data + batch_size]
-            y_batch = np.asarray(y_batch).reshape(10, 1)
-            y_pred = np.matmul(x_batch, self.W)
+            mseloss = 0
+            cnt = 0
+            tmp = [[x_t, y_t] for x_t, y_t in zip(x, y)]
+            random.shuffle(tmp)
+            x = [x[0] for x in tmp]
+            y = [x[1] for x in tmp]
+            x = np.asarray(x)
+            y = np.asarray(y)
 
+            for i in range(0, x.shape[0]-batch_size, batch_size):
 
-            m_grad = -2 / len(x) * sum(np.dot(x_batch.transpose(), (y_batch-y_pred)))
-            mseloss = np.sum(np.square(y_batch-y_pred))
+                x_batch = x[i: i + batch_size]
+                y_batch = y[i: i + batch_size]
+                y_batch = np.asarray(y_batch).reshape(10, 1)
+                y_pred = np.matmul(x_batch, self.W)
+                m_grad = -1 / batch_size * sum(np.dot(x_batch.transpose(), (y_batch-y_pred)))
+                mseloss += np.mean(np.square(y_batch-y_pred))
+                self.W = optim.update(self.W, m_grad, lr)
+                cnt += 1
+            mseloss = mseloss/cnt
+            print(epoch, "in loss", mseloss)
             loss_total.append(mseloss)
-            self.W = optim.update(self.W, m_grad, lr)
-
-            #self.W = self.W-m_grad*lr
-
-
-        final_loss = mseloss/batch_size
 
         # ============================================================
 
-        return final_loss
+        return mseloss
 
     def forward(self, x):
         y_predicted = None
