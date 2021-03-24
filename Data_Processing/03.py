@@ -14,9 +14,18 @@ def getExternalLinks(bs):
                 externalLinks.append(link.attrs['href'])
     return externalLinks
 
+def save_text(links):
+    with open("Q2.txt", "a+") as f:
+        for link in links:
+            f.write(link+"\n")
+
+
 r = requests.get("http://en.wikipedia.org/wiki/Data_Science")
 soup = BeautifulSoup(r.content)
 
 links = getExternalLinks(soup)
 for link in links:
     print(link)
+
+save_text(links)
+
