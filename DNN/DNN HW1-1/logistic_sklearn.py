@@ -6,7 +6,7 @@ from sklearn.linear_model import LogisticRegression
 # 2. Adjust Hyperparameters
 # ========================= EDIT HERE ========================
 # DATA
-DATA_NAME = 'Titanic'
+DATA_NAME = 'Digit'
 
 # HYPERPARAMETERS
 num_epochs = 300

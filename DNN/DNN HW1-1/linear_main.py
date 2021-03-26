@@ -27,7 +27,7 @@ assert DATA_NAME in ['Concrete', 'Graduate']
 assert OPTIMIZER in ['SGD']
 
 # Load dataset, model and evaluation metric
-train_data, test_data, linear_regression, metric = _initialize(DATA_NAME)
+train_data, test_data, linear_regression, metric = _initialize("Graduate")
 train_x, train_y = train_data
 
 num_data, num_features = train_x.shape
