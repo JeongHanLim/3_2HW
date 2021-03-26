@@ -1,0 +1,10 @@
+6.44 Start copying 1.jpg to d1.jpg
+6.48 d1.jpg is copied completely
+9.33 Start copying 2.txt to d2.txt
+9.33 d2.txt is copied completely
+13.56 Start copying 3.jpg to d3.jpg
+13.59 d3.jpg is copied completely
+21.77 Start copying 4.mp4 to d4.mp4
+29.47 Start copying 1.jpg to d5.jpg
+29.51 d5.jpg is copied completely
+111.14 d4.mp4 is copied completely
