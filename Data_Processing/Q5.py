@@ -61,9 +61,9 @@ def tf(keyword, len_web, text):
 
 def get_idf(dict, urls):
     idf_list = {}
-    for word, tf_value in dict.items():
-        idf_list[word] = len(urls) - tf_value.count(0)
 
+    for word, tf_value in dict.items():
+        idf_list[word] = np.log(len(urls) / (len(urls) - tf_value.count(0)))
     return idf_list
 
 def cal_tf_idf(tf, idf, keyword):
@@ -91,27 +91,29 @@ def delete_stop_words(words):
 def print_dict(dict):
     for key in dict.keys():
         print(key, dict[key], " ", end="")
+    print("\n", end = "")
 
 
 def save_txt(lista, listb, dicta, dictb, dictc):
-    f = open("Q3_Part1.txt", "a+")
-    f.write("Number of unique words in documents: ")
-    f.write(str(lista)+"\n")
-    f.write("Length of documents: ")
-    f.write(str(listb)+"\n")
-    f.write("tf")
-    f.write(print_dict(dict(dicta)))
-    """
-    print("tf ", end="")
-    print_dict(dict(tf_dict_all))
-    print("\n")
-    print("idf ", end="")
-    print_dict(idf_list)
-    print("\n")
-    print("tf-idf ", end="")
-    print_dict(tf_idf_dict)
-    print("\n")
-    """
+    f = open("Q3_Part2.txt", "a+")
+    f.write("Number of unique words in documents: "+str(lista)+"\n")
+    f.write("Length of documents: "+str(listb)+"\n")
+
+    f.write("tf ")
+    for key in dicta.keys():
+        f.write(str(key)+" "+str(dicta[key])+"  ")
+    f.write("\n")
+
+    f.write("idf ")
+    for key in dictb.keys():
+        f.write(str(key)+" " + str(dictb[key]) + "  ")
+    f.write("\n")
+
+    f.write("tf-idf ")
+    for key in dictc.keys():
+        f.write(str(key)+" " + str(dictc[key]) + " ")
+    f.write("\n")
+
     f.close()
 
 def main():
@@ -154,14 +156,11 @@ def main():
     print("Length of documents", len_document_list)
     print("tf ", end="")
     print_dict(dict(tf_dict_all))
-    print("\n")
     print("idf ", end="")
     print_dict(idf_list)
-    print("\n")
     print("tf-idf ", end="")
     print_dict(tf_idf_dict)
-    print("\n")
-
     save_txt(n_words_list, len_document_list, tf_dict_all, idf_list, tf_idf_dict)
+
 if __name__=="__main__":
     main()

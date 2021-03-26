@@ -11,7 +11,7 @@ np.random.seed(428)
 DATA_NAME = 'Concrete'
 
 # HYPERPARAMETERS
-batch_size = 10
+batch_size = 823
 num_epochs = 4000
 learning_rate = 0.001
 

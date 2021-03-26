@@ -54,9 +54,15 @@ def make_dict(words):
             count = frequency.get(word, 0)
             frequency[word] = count + 1
 
-    sorted_frequency = sorted(frequency.items(), reverse=True, key=lambda x: x[1])
+    sorted_frequency = sorted(frequency.items(), key = lambda x:x[0])
+    sorted_frequency = sorted(sorted_frequency, reverse=True, key=lambda x: x[1])
+
     return sorted_frequency
 
+def save_txt(dictionary):
+    with open("Q1_Part1.txt", "a+") as f:
+        for x in dictionary:
+            f.write(str(x[0])+"\t"+str(x[1])+"\n")
 
 def main():
 
@@ -71,6 +77,7 @@ def main():
 
     for x in frequency:
         print(x[0],"\t", x[1])
+    save_txt(frequency)
 
 if __name__ == '__main__':
     main()
