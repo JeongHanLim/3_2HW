@@ -5,7 +5,9 @@ filename = 'bush-gore-results-fl_demo.csv'
 df = pd.read_csv(filename)
 
 max_index = df['npop'].argmax()
-if df.iloc[max_index,0]>df.iloc[max_index, 1]:
-    print(df.iloc[max_index, 0])
+
+
+if (df.loc[max_index,'bush']<df.loc[max_index, 'gore']):
+    print("Gore")
 else:
-    print(df.iloc[max_index, 1])
+    print("Bush")

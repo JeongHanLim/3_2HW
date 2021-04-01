@@ -8,8 +8,8 @@ df_resize = df.loc[:, ['bush', 'gore', 'brow', 'nade', 'harr', 'hage', 'buch', '
 
 bush_won = 0
 for len in range(len(df_resize)):
-    if df_resize.iloc[len,:].max() == df_resize.iloc[len,0]:
+    if df_resize.loc[len,:].max() == df_resize.loc[len,'bush']:
         bush_won += 1
 print(bush_won)
 
-#print(df['bush'])
+
