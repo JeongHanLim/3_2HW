@@ -1,7 +1,6 @@
 import os
 import time
 from threading import Thread
-import threading
 from queue import Queue
 
 def get_file_name():
@@ -66,7 +65,7 @@ if __name__ == "__main__":
         globals()['t{}'.format(index)] = Thread(target = copy_file, args = (src, dst, queue))
         exec('t%d.daemon = True' % (index))
         exec('t%d.start()'%(index))
-        #print("number of thread-2", threading.active_count())
+
         index +=1
 
     print("Waiting for file copying...")
@@ -74,6 +73,5 @@ if __name__ == "__main__":
         exec('t%d.join()'%(idx))
     logging(queue, f, start_t)
     print("File transfer finished....")
-    #print("number of thread-1", threading.active_count())
 
     f.close()
