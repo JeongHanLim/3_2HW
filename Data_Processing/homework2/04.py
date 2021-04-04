@@ -10,7 +10,6 @@ co = 50
 df_resize = df.loc[:, 'buch']
 #print(df_resize)
 buch_mean = df_resize.mean()
-print(buch_mean)
-print(df_resize[49])
-print(df_resize.iloc[co-1])
-print(np.square(df_resize.iloc[co-1]-buch_mean))
+buch_std = df_resize.std()
+print((df_resize.iloc[co-1]-buch_mean)/buch_std)
+#print(np.square(df_resize.iloc[co-1]-buch_mean))

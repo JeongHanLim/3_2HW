@@ -5,10 +5,13 @@ import numpy as np
 #default
 filename = 'bush-gore-results-fl_demo.csv'
 df = pd.read_csv(filename)
-
 df_resize = df.loc[:, ['bush', 'gore', 'brow', 'nade', 'harr', 'hage', 'buch', 'mcre', 'phil', 'moor']]
-
 df_resize['bush-2']=df_resize.loc[:, 'bush']-df_resize.apply(lambda row : row.nlargest(2).values[-1], axis=1)
 df_resize['gore-2']=df_resize.loc[:, 'gore']-df_resize.apply(lambda row : row.nlargest(2).values[-1], axis=1)
-print(df_resize['bush-2'].max())
-print(df_resize['gore-2'].max())
+
+bushidx = df_resize['bush-2'].idxmax()
+goreidx = df_resize['gore-2'].idxmax()
+
+latdiff = (np.square(df.loc[bushidx, 'lat']-df.loc[goreidx,'lat']))
+londiff = (np.square(df.loc[bushidx, 'lon']-df.loc[goreidx,'lon']))
+print(np.sqrt(latdiff+londiff))
