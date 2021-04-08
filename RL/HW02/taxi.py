@@ -43,10 +43,14 @@ def testing_without_learning():
 
 
 
+
 def model_free_RL(Q, mode):
     agent = Agent(Q, mode)
     num_episodes = 100000
     last_100_episode_rewards = deque(maxlen=100)
+    max = -800
+    max_i_episode = 0
+
     for i_episode in range(1, num_episodes+1):
 
         state = env.reset()
@@ -61,14 +65,17 @@ def model_free_RL(Q, mode):
             if done:
                 last_100_episode_rewards.append(episode_rewards)
                 break
-
             state = next_state
 
         if (i_episode >= 100):
             last_100_episode_rewards.append(episode_rewards)
             avg_reward = sum(last_100_episode_rewards) / len(last_100_episode_rewards)
-            print("\rEpisode {}/{} || Best average reward {}\n".format(i_episode, num_episodes, avg_reward), end="")
-
+            if avg_reward > max:
+                max = avg_reward
+                max_i_episode = i_episode
+            if i_episode%50==0:
+                print("\rEpisode {}/{} || Best average reward {}".format(i_episode, num_episodes, avg_reward), end="")
+                print("\tMax Reward at Episode", max_i_episode, " with reward ",max)
     print()
 
 
