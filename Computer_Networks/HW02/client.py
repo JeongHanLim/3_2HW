@@ -53,5 +53,6 @@ if __name__ == "__main__":
     address = input("Write down your address http://")
     #ip, port = addr_split(address)
     #For a while
-    ip, port = 'localhost', 10080
+    #ip, port = "192.168.25.13", 10081
+    ip, port = "192.168.0.16", 10080
     AsynchronousClient(ip, port).StartSpeaking()

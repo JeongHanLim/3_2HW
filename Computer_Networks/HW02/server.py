@@ -1,4 +1,4 @@
-from socket import *
+import socket
 import time
 import os
 import queue
@@ -9,61 +9,136 @@ from threading import Thread
 # When making thread, getting data from client is in while loop, so that threading should be done
 # Within Function, which gives data to client.
 
-
+#TODO: bind -> listen -> accept
+#TODO : server bind permission denied.
 
 class Server(object):
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
-        self.sock = socket(AF_INET, SOCK_STREAM)
-        self.sock.bind((self.ip, self.port))
+        self.reuse = True
+        self.qsize = 10
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#        self.server_bind()
+#        self.server_listen()
+
+
         self.q = queue.Queue()
         self.threads = []
-        self.sock.listen()
-        self.sock, self.addr = self.sock.accept()
-
+        print("initialization Finished.")
 
     def __del__(self):
-        self.sock.close()
+        self.socket.close()
 
     # Used in send_file
-    def worker(self, item):
-        self.sock.send(bytes(item, encoding='utf8'))
 
+    def server_bind(self):
+        if self.reuse==True:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind((self.ip, self.port))
 
-    def send_file(self):
+    def server_listen(self):
+        self.socket.listen(self.qsize)
+
+    def send_file(self, c, addr):
         while(True):
-            num_worker_threads=1
             item = self.q.get()
-
             if item == '' or item is None:
                 continue
-
-            if not os.path.exists("data/"+item):
-                self.worker("404 Not Found")
+            if not os.path.exists(item):
+                str_error = "404 Not found error"
+                HTTP_RESPONSE = b'\r\n'.join([
+                    b"HTTP/1.1 200 OK",
+                    b"Connection: close",
+                    b"Content-Type: text.html",
+                    bytes("Content-Length: %s" % len(str_error), 'utf-8'),
+                    b'', str_error.encode('utf-8')
+                ])
+                c.sendall(HTTP_RESPONSE)
                 continue
+            print("processing ", item)
 
-            for i in range(num_worker_threads):
-                t = Thread(target=self.worker, args=(item,))
-                t.start()
-                print("Thread starting...")
-                self.threads.append(t)
+            with open(item, 'rb') as f:
+                data = f.read()
+                exten = item.split('.')[1]
+                img_ext_list = ["JPG","PNG", "GIF","WEBP","TIFF","PSD","RAW","BMP"]
+                if exten in img_ext_list:
+                    print("processing img file", item)
+                    HTTP_RESPONSE = b'\r\n'.join([
+                        b"HTTP/1.1 200 OK",
+                        b"Connection: close",
+                        b"Content-Type: image/jpg",
+                        bytes("Content-Length: %s" % len(data), 'utf-8'),
+                        b'', data
+                    ])
+                    c.sendall(HTTP_RESPONSE)
+                else:
+                    print("processing html file", item)
+                    HTTP_RESPONSE = b'\r\n'.join([
+                        b"HTTP/1.1 200 OK",
+                        b"Connection: close",
+                        b"Content-Type: text/html",
+                        bytes("Content-Length: %s" % len(data), 'utf-8'),
+                        b'', data
+                    ])
+                    c.sendall(HTTP_RESPONSE)
+            print("Trasmitting Finished")
+            return
 
-            print(self.threads)
-
-    def recv_link(self):
+    def recv_link(self, c, addr):
         while(True):
-            msg = self.sock.recv(1024).decode()
-            self.q.put(msg)
+
+            msg = c.recv(1024).decode()
+            if msg == '' or msg is None:
+                continue
+            processed = msg.split('/')[1].split(' ')[0]
+            self.q.put(processed)
+            return
+
+    def acceptence(self, c, addr):
+
+        self.recv_link(c, addr)
+        self.send_file(c, addr)
 
     def StartListening(self):
-        Thread(target=self.recv_link).start()
-        Thread(target=self.send_file).start()
+        self.server_bind()
+        self.server_listen()
+
+        while True:
+
+            c, addr = self.socket.accept()
+            Thread(target=self.acceptence, args=(c, addr)).start()
+
+
+        self.socket.close()
+
 
 if __name__ == "__main__":
-    Server('localhost', 10080).StartListening()
+    #Server("192.168.25.13", 10081).StartListening()
+    Server(ip="192.168.25.13", port=10080).StartListening()
 
 
 
 
 
+
+
+
+
+
+
+    #self.socket.sendall(str.encode("HTTP/1.0 200 OK\n", 'utf-8'))
+    #self.socket.sendall(str.encode('Content-Type: text/html\n', 'utf-8'))
+    #self.socket.send(str.encode('\r\n'))
+    #for l in f.readlines():
+    #    print('Sent ', repr(l))
+    #    # self.socket.sendall(str.encode("" + l + "", 'utf-8'))
+    #    self.socket.send(str(l).encode())
+    #    l = f.read(10240000)
+
+    # import time
+    # cur_time = int(time.time())
+    # globals()['t{}'.format(cur_time)] = Thread(target=self.worker, args=(item,))
+    # exec('t%d.daemon = True' % (cur_time))
+    # exec('t%d.start()' % (cur_time))
+    # exec('self.threads.append("t%d")' % cur_time)
