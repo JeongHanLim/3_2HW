@@ -9,6 +9,11 @@ class Agent:
         self.learning_rate = 0.0271
         self.gamma = 0.9401
         self.e = 0.004102
+        self.traj =[]
+        self.N= Q
+        self.success = 0
+        self.buffer = 1 # Maintains -200......
+
 
     def select_action(self, state):
         """
@@ -51,10 +56,29 @@ class Agent:
         """
 
         #For constant, and for shortening sentence..
-        gamma, lr = self.gamma, self.learning_rate
 
-        next_action = self.select_action(next_state)
-        #model free : compare action.
-        grad_q = self.Q[next_state][next_action] - self.Q[state][action]
-        self.Q[state][action] += lr*(reward+gamma*grad_q)
+        if self.mode =="mc_control":
+            self.gamma = 0.9914
+            self.traj.append([state, action, reward])
+            #self.success +=1
 
+            if done:
+                value = 0
+                #for old_state, old_action, old_reward in reversed(self.traj):
+                for state, action, reward in reversed(self.traj):
+                    value = reward + self.gamma * value
+                    self.N[state][action] += 1
+                    #self.Q[state][action] -= self.learning_rate * (value - self.Q[state][action])
+                    self.Q[state][action] += 1/self.N[state][action]*(value -self.Q[state][action])
+                #self.traj = []
+                if len(self.traj)>100000:
+                    self.traj = []
+                #self.success = 0
+
+
+        else:
+
+            next_action = self.select_action(next_state)
+            # model free : compare action.
+            grad_q = self.Q[next_state][next_action] - self.Q[state][action]
+            self.Q[state][action] += self.learning_rate * (reward + self.gamma * grad_q)

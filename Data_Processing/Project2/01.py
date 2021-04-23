@@ -10,7 +10,7 @@ movieid_unique = df["movieId"].unique().tolist()
 print(len(userid_unique))
 print(len(movieid_unique))
 
-new_df = pd.DataFrame(0, columns = userid_unique, index = movieid_unique)
+new_df = pd.DataFrame(0, columns=userid_unique, index=movieid_unique)
 for i in range(len(df)):
     new_df.loc[df.loc[i, "movieId"],df.loc[i, "userId"]]\
         = df.loc[i, "rating"]
