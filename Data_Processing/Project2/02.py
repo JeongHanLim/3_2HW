@@ -16,6 +16,7 @@ df = df.drop("Unnamed: 0", axis=0)
 df = df-df.mean()
 print(df)
 
+
 #TODO: For Some reason, sum of df does not go to 0.
 
 pca = PCA(n_components = 2)
