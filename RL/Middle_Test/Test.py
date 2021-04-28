@@ -93,7 +93,6 @@ class Pacman(PacmanUtils):
                     # UPDATE target network
                     pass
 
-
         def reset(self):
             # 새로운 episode 시작시 불리는 함수.
             self.last_score = 0
