@@ -1,41 +1,51 @@
 import pandas as pd
 import numpy as np
-from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
-filename = "userXmovie.csv"
-original_df = pd.read_csv(filename)
-
-# For PCA, transpose data
-df = original_df.transpose()
-df.rename(columns = df.iloc[0, :], inplace = True)
-df.columns = df.columns.astype('int64')
-df = df.drop("Unnamed: 0", axis=0)
+def transpose_dataframe(df):
+    df = df.transpose()
+    df=df.drop(["Unnamed: 0"])
+    return df
 
 # Making Mean centered data
-df = df-df.mean()
-print(df)
+def mean_centered(df):
+    return df-df.mean()
 
-
-#TODO: For Some reason, sum of df does not go to 0.
-
-pca = PCA(n_components = 2)
-principalComponents = pca.fit_transform(df)
-principalDf = pd.DataFrame(data = principalComponents
-             , columns = ['principal component 1', 'principal component 2'])
-
-finalDataFrame = pd.concat([principalDf, df], axis=1)
+def check_mean_centered(df):
+    print(df.sum().sum())
 
 
 
-fig = plt.figure(figsize = (8,8))
-ax = fig.add_subplot(1,1,1)
-ax.set_xlabel('Principal Component 1', fontsize = 15)
-ax.set_ylabel('Principal Component 2', fontsize = 15)
-ax.set_title('2 Component PCA', fontsize = 20)
+if __name__=="__main__":
+    filename = "userXmovie.csv"
+    original_df = pd.read_csv(filename)
+    df = transpose_dataframe(original_df)
+    df = mean_centered(df)
+    df=df.iloc[:, 0:2]
+    #StandardScaler().fit(df) # or this.
+    #print(df)
+    principal = PCA(n_components=2)
+    principal_components = principal.fit_transform(df)
+    principaldf = pd.DataFrame(data=principal_components, index=df.index)
+    principaldf.insert(0, "movieId", principaldf.index, True)
+    principaldf["movieId"] = pd.to_numeric(principaldf["movieId"])
 
-plt.scatter(finalDataFrame.loc[:, "principal component 1"], finalDataFrame.loc[:, "principal component 2"])
-plt.plot([x-16 for x in range(120)], [x for x in range(120)])
-plt.plot([x-16 for x in range(120)], [-x for x in range(120)])
+    filename2 = "movies.csv"
+    df2 = pd.read_csv(filename2)
+    df3 = pd.merge(principaldf, df2, left_on="movieId", right_on="movieId", how='outer')
+    df3 = df3.sort_values("movieId")
+    df3["genres"]=df3["genres"].str.split("|").str[0]
+    genre = df3["genres"].tolist()
+    unique_genre = df3["genres"].unique().tolist()
+    genre_dict = {}
+    df3["A"]=df3[0]
+    df3["B"] = df3[1]
+    print(df3)
 
-plt.show()
+    df3.plot.scatter(x="A", y="B")
+    plt.show()
+    print(df3[["A","B"]])
+    # df3 = pd.concat([principaldf, df2["genres"]], axis=1)
+    # print(df3)

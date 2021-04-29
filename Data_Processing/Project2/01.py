@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-filename = "ml-latest-small//"+"ratings.csv"
+filename = "ratings.csv"
 df = pd.read_csv(filename)
 
 #Checked
@@ -10,9 +10,9 @@ movieid_unique = df["movieId"].unique().tolist()
 print(len(userid_unique))
 print(len(movieid_unique))
 
-new_df = pd.DataFrame(0, columns=userid_unique, index=movieid_unique)
+new_df = pd.DataFrame(0, columns=movieid_unique, index=userid_unique)
 for i in range(len(df)):
-    new_df.loc[df.loc[i, "movieId"],df.loc[i, "userId"]]\
+    new_df.loc[df.loc[i, "userId"],df.loc[i, "movieId"]]\
         = df.loc[i, "rating"]
 print(new_df)
 new_df.to_csv("userXmovie.csv")
