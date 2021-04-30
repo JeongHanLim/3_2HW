@@ -36,7 +36,7 @@ if __name__=="__main__":
     df2 = pd.read_csv(filename2)
     df3 = pd.merge(principaldf, df2, left_on="movieId", right_on="movieId", how='outer')
     df3 = df3.sort_values("movieId")
-    df3["genres"]=df3["genres"].str.split("|").str[0]
+    df3["genres"] = df3["genres"].str.split("|").str[0]
     genre = df3["genres"].tolist()
     unique_genre = df3["genres"].unique().tolist()
     genre_dict = {}
