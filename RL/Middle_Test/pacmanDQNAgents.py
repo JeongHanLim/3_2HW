@@ -16,10 +16,10 @@ from collections import deque, namedtuple
 DISCOUNT_RATE = 0.99        # discount factor
 LEARNING_RATE = 0.0005      # learning rate parameter
 REPLAY_MEMORY = 50000       # Replay buffer 의 최대 크기
-LEARNING_STARTS = 1000	    # 5000 스텝 이후 training 시작
-TARGET_UPDATE_ITER = 1000  # update target network
+LEARNING_STARTS = 5000	    # 5000 스텝 이후 training 시작
+TARGET_UPDATE_ITER = 100  # update target network
 
-EPSILON_START = 0.99
+EPSILON_START = 0.8
 EPSILON_END = 0.01
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward', 'done'))
@@ -36,12 +36,11 @@ class ConvBlock(nn.Sequential):
 class DQN(torch.nn.Module):
     def __init__(self, outputs):
         super(DQN, self).__init__()
-        self.conv_layers = nn.Sequential(*[ConvBlock(6, 7, 3), ConvBlock(7, 7, 3), ConvBlock(7,1,3)])
-        self.pool = nn.AdaptiveAvgPool2d((4, 4))
+        self.conv_layers = nn.Sequential(*[ConvBlock(6, 16, 3), ConvBlock(16, 32, 3), ConvBlock(32, 32, 3)])
+        self.pool = nn.AdaptiveAvgPool2d((8, 8))
         self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(16, 8)
-        #self.fc2 = nn.Linear(8, 8)
-        self.fc3 = nn.Linear(8, outputs)
+        self.fc1 = nn.Linear(2048, 128)
+        self.fc3 = nn.Linear(128, outputs)
 
     def forward(self, x):
         z = self.conv_layers(x)
@@ -49,10 +48,7 @@ class DQN(torch.nn.Module):
         z = self.flatten(z)
         z = self.fc1(z)
         z = F.relu(z)
-        # z = self.fc2(z)
-        # z = F.relu(z)
         z = self.fc3(z)
-        #return x.view(x.size(0), -1)
         return z
 
 
@@ -71,12 +67,6 @@ class ReplayMemory:
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)
 
-    def __len__(self):
-        return len(self.memory)
-
-    def print(self):
-        print(self.memory[self.position])
-
 
 class PacmanDQN(PacmanUtils):
     def __init__(self, args):
@@ -93,8 +83,9 @@ class PacmanDQN(PacmanUtils):
         else:
             mode = "Training model"
             self.policy_network = DQN(4)
-            self.target_network = DQN(4) #TODO: optimizer place needs to be replaced.
-            self.optimizer = optim.RMSprop(self.policy_network.parameters())
+            self.target_network = DQN(4)
+            self.target_network.load_state_dict(self.policy_network.state_dict())
+            self.optimizer = optim.RMSprop(self.policy_network.parameters(), lr=LEARNING_RATE)
 
         print("=" * 100)
         print("Double : {}    Multistep : {}/{}steps    Train : {}    Test : {}    Mode : {}     Model : {}".format(
@@ -113,12 +104,7 @@ class PacmanDQN(PacmanUtils):
         self.steps_per_epi = 0     # steps taken in one episodes
         self.episode_number = 0
         self.episode_rewards =[]
-        self.batch_size = 128
-
-        self.epsilon = EPSILON_START  # epsilon init value
-        self.action = None
-        self.state = None
-        self.num_action = 4
+        self.batch_size = 32
 
     def predict(self, state):
 
@@ -127,31 +113,23 @@ class PacmanDQN(PacmanUtils):
                 state = self.preprocess(state)
                 state = state.unsqueeze(0)
                 state = state.float()
-                #print(state)
-                result = self.target_network(state)
-                # print(result, result.max(1)[1].view(1,1))
+                result = self.target_network(state) #?Target?
                 self.action = result.max(1)[1].view(1,1)
-                if self.steps_taken%1000==0:
-                    print(self.action)
         else:
             self.action = torch.tensor([np.random.randint(0, 4)]).long()
-        return self.action
+        return self.action.item()
 
 
     def update_epsilon(self):
-
         self.epsilon = EPSILON_END + (EPSILON_START - EPSILON_END) * \
-                        math.exp(-1. * self.steps_taken / 10000)
-
+                        math.exp(-1. * self.steps_taken / 50000)
         return
 
     def step(self, next_state, reward, done):
         # next_state = self.state에 self.action 을 적용하여 나온 state
         # reward = self.state에 self.action을 적용하여 얻어낸 점수.
         if self.action is None: #First.
-
             self.state = self.preprocess(next_state)
-
         else:
             self.next_state = self.preprocess(next_state)
             self.memory.write(self.state, self.action, self.next_state, reward, done)
@@ -167,46 +145,43 @@ class PacmanDQN(PacmanUtils):
             self.train()
             self.update_epsilon()
             if self.steps_taken % TARGET_UPDATE_ITER == 0:
-                print("model updated")
+                # print("model updated")
                 self.target_network.load_state_dict(self.policy_network.state_dict())
 
     def train(self):
         if self.steps_taken > LEARNING_STARTS:
             # Get data from Memory by random sampling
-            transitions = self.memory.sample(self.batch_size)
             # make zip file using namedtuple, which is faster than for loop
-            batched = Transition(*zip(*transitions))
             # As data needs to be reshaped by batch size, concat with reshaping
-            state_batch = torch.cat(batched.state).reshape(self.batch_size, -1, 7, 7).float()
             # Due to some reason, concat does not work, so I just reshaped.
             # For action_batch, there's no need to reshape
             # Because it will be used by index.
-            action_batch = torch.tensor(batched.action)
             # reward reshaped
-            reward_batch = torch.tensor(batched.reward).reshape(-1, 1).float()
-
-            num_done = torch.tensor(batched.done).reshape(-1, 1)
             #As Target Network, stop grading.
+            # Predict next q using target network
+
+            transitions = self.memory.sample(self.batch_size)
+            batched = Transition(*zip(*transitions))
+            state_batch = torch.stack(batched.state).float()
+            action_batch = torch.tensor(batched.action).long().unsqueeze(1)
+            reward_batch = torch.tensor(batched.reward).float().unsqueeze(1)
+            next_state_batch = torch.stack(batched.next_state).float()
+            # num_done = torch.tensor(batched.done).reshape(-1, 1)
+
+            #Next Q
             with torch.no_grad():
-                #Predict next q using target network
-                next_q = self.target_network(state_batch)
-                next_q, _ = next_q.max(dim=1)
-                next_q = next_q.reshape(-1, 1).float()
-                # target_q = next_q * 0.99 * num_done + reward_batch
-                target_q = next_q * 0.99*num_done + reward_batch
+                next_sv = self.target_network(next_state_batch)
+                next_sv = next_sv.detach().max(dim=1)[0]
+                next_sv = next_sv.unsqueeze(1).float()
+                expected_sa_values = next_sv * DISCOUNT_RATE + reward_batch
 
-            # calculate current q using policy network
-            current_q = self.policy_network(state_batch)
-            # calculate best q on action on every batch.
-            # Size needs to be batch * 1
-            policy_set = torch.tensor(np.zeros((len(current_q), 1))).float()
-            for i in range(len(current_q)):
-                policy_set[i]=current_q[i][action_batch[i].long()]
-            if self.steps_taken%1000==0:
-                print(policy_set[32:41],target_q[32:41])
+            #Current Q
+            current_q = self.policy_network(state_batch).gather(1, action_batch)
 
-            loss = F.smooth_l1_loss(policy_set, target_q) #TODO: Might Be Broadcasted.
+
+            loss = F.smooth_l1_loss(current_q, expected_sa_values)
             self.losses.append(loss.item())
+
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -228,6 +203,7 @@ class PacmanDQN(PacmanUtils):
         # episode 종료시 불리는 함수.
         done = True
         reward = self.getScore(state)
+        # print(reward)
         if reward >= 0: # not eaten by ghost when the game ends
             self.win_counter +=1
 
@@ -240,12 +216,12 @@ class PacmanDQN(PacmanUtils):
             print("Episode no = {:>5}; Win rate {:>5}/500 ({:.2f}); average reward = {:.2f}; epsilon = {:.2f}".format(self.episode_number,
                                                                     self.win_counter, win_rate, avg_reward, self.epsilon))
 
-        if self.episode_number%100==0:
-            print("Episode no = {:>5};, recent average loss {}".format(self.episode_number, np.mean(self.losses[-100:-1])))
-        self.win_counter = 0
-        self.episode_rewards= []
-        if self.trained_model==False and self.episode_number%1000 == 0:
-            torch.save(self.target_network, self.model)
+        if self.episode_number%500==0:
+            print("Episode no = {:>5};, recent average loss {}".format(self.episode_number, np.mean(self.losses[-500:-1])))
+            self.win_counter = 0
+            self.episode_rewards= []
+            if self.trained_model==False and self.episode_number%1000 == 0:
+                torch.save(self.target_network, self.model)
 
 
     def blank_grid(self, state, N):
@@ -316,16 +292,6 @@ class PacmanDQN(PacmanUtils):
         blank_grid  = self.grid2array(blank_grid, 1, state)
         blank_grid  = self.scalar2array(blank_grid, 3, state.getCapsules())
         blank_grid = self.ghost_scared(blank_grid, 4, state)
-        #blank_grid  = self.state2array(blank_grid, 4, state.data.agentStates[0], state)
-        #blank_grid  = self.state2array(blank_grid, 5, state.data.agentStates[1], state)
-
-        #print(blank_grid[0])
-        #print(blank_grid[4])
-        #print(blank_grid[7])
-        #print(blank_grid[5])
-        #print(blank_grid[8])
-        #print("==========================")
-            #time.sleep(2)
+        # print(blank_grid)
         return torch.tensor(blank_grid)
 
-#9001->1560...?
