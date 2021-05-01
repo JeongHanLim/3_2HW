@@ -13,11 +13,11 @@ import time
 from collections import deque, namedtuple
 
 # model parameters
-DISCOUNT_RATE = 0.99        # discount factor
+DISCOUNT_RATE = 0.999        # discount factor
 LEARNING_RATE = 0.0005      # learning rate parameter
 REPLAY_MEMORY = 50000       # Replay buffer 의 최대 크기
 LEARNING_STARTS = 5000	    # 5000 스텝 이후 training 시작
-TARGET_UPDATE_ITER = 100  # update target network
+TARGET_UPDATE_ITER = 1000  # update target network
 
 EPSILON_START = 0.8
 EPSILON_END = 0.01
@@ -29,7 +29,7 @@ class ConvBlock(nn.Sequential):
     def __init__(self, inchannel, outchannel, kernel_size=3, stride=1):
         super(ConvBlock, self).__init__(*[nn.Conv2d(inchannel, outchannel, kernel_size, stride=stride),
                                           #nn.BatchNorm2d(outchannel),
-                                          nn.ReLU(inplace=True)
+                                          nn.LeakyReLU()
                                           ])
 
 
@@ -47,7 +47,7 @@ class DQN(torch.nn.Module):
         z = self.pool(z)
         z = self.flatten(z)
         z = self.fc1(z)
-        z = F.relu(z)
+        z = F.leaky_relu(z)
         z = self.fc3(z)
         return z
 
@@ -104,7 +104,7 @@ class PacmanDQN(PacmanUtils):
         self.steps_per_epi = 0     # steps taken in one episodes
         self.episode_number = 0
         self.episode_rewards =[]
-        self.batch_size = 32
+        self.batch_size = 64
 
     def predict(self, state):
 
@@ -126,7 +126,7 @@ class PacmanDQN(PacmanUtils):
         return
 
     def step(self, next_state, reward, done):
-        # next_state = self.state에 self.action 을 적용하여 나온 state
+        # next_state = self.state에 self.action 을  나온 state
         # reward = self.state에 self.action을 적용하여 얻어낸 점수.
         if self.action is None: #First.
             self.state = self.preprocess(next_state)
@@ -166,25 +166,41 @@ class PacmanDQN(PacmanUtils):
             action_batch = torch.tensor(batched.action).long().unsqueeze(1)
             reward_batch = torch.tensor(batched.reward).float().unsqueeze(1)
             next_state_batch = torch.stack(batched.next_state).float()
-            # num_done = torch.tensor(batched.done).reshape(-1, 1)
-
+            num_done = torch.tensor(batched.done).reshape(-1, 1)
             #Next Q
             with torch.no_grad():
-                next_sv = self.target_network(next_state_batch)
-                next_sv = next_sv.detach().max(dim=1)[0]
-                next_sv = next_sv.unsqueeze(1).float()
-                expected_sa_values = next_sv * DISCOUNT_RATE + reward_batch
+                next_sv = torch.zeros(self.batch_size)
+                if self.double:
+                    #Does max right?
+                    next_state_actions = self.target_network(next_state_batch).max(1)[1].view(64,1).long()
+                    # print(next_state_actions.shape)
+                    next_sv = self.target_network(next_state_batch).gather(1, next_state_actions)
+                    next_sv = next_sv.float()
+
+                else:
+                    next_sv = self.target_network(next_state_batch).detach().max(dim=1)[0]
+                    next_sv = next_sv.unsqueeze(1).float()
+                expected_sa_values = next_sv * DISCOUNT_RATE*(1-num_done*1) + reward_batch
+
 
             #Current Q
             current_q = self.policy_network(state_batch).gather(1, action_batch)
-
-
+            if self.episode_number % 100 == 0:
+                print("current", current_q[15:20],"expected", expected_sa_values[15:20])
             loss = F.smooth_l1_loss(current_q, expected_sa_values)
+            #loss = F.mse_loss(current_q, expected_sa_values)
+
             self.losses.append(loss.item())
 
             self.optimizer.zero_grad()
             loss.backward()
+
+            for param in self.policy_network.parameters():
+
+                param.grad.data.clamp_(-1, 1)
+
             self.optimizer.step()
+
 
         else:
             return
@@ -203,12 +219,13 @@ class PacmanDQN(PacmanUtils):
         # episode 종료시 불리는 함수.
         done = True
         reward = self.getScore(state)
-        # print(reward)
         if reward >= 0: # not eaten by ghost when the game ends
             self.win_counter +=1
 
         self.step(state, reward, done)
         self.episode_rewards.append(self.episode_reward)
+        if self.episode_number % 100 == 0:
+            print(self.episode_rewards)
         win_rate = float(self.win_counter) / 500.0
         avg_reward = np.mean(np.array(self.episode_rewards))
 
