@@ -8,6 +8,8 @@ import seaborn as sns
 
 filename = "userXmovie.csv"
 df = pd.read_csv(filename)
+df = df.iloc[:, 1:]
+print(df)
 inertias=[]
 def kmean(n_cluster, df):
     model = KMeans(n_clusters=n_cluster, algorithm="auto")

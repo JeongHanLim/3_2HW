@@ -19,6 +19,7 @@ class PacmanUtils(game.Agent):
         legal = state.getLegalActions(0) # check for illegal moves
         if move not in legal:
             move = Directions.STOP
+
         return move
     
     def get_value(self, direction):
