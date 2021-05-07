@@ -1,5 +1,23 @@
 import sys
 from logHandler import logHandler
+import socket
+import queue
+
+class filesender(object):
+    def __init__(self, ip, port):
+        self.ip = ip
+        self.port = port
+        self.reuse = True
+        self.qsize = 10
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.q = queue.Queue()
+        self.threads = []
+        print("initilization Finished")
+
+    def __del__(self):
+        self.socket.close()
+
+    def
 
 def fileSender():
     print('sender program starts...')#remove this
